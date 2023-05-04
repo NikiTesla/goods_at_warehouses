@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  db:
+      container_name: lamoda_pg
+      image: postgres
+      restart: always
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: pass
+        POSTGRES_DB: lamoda
+      ports:
+      - "5433:5432"
+      volumes:
+      - db-data:/var/lib/postgresql/data
+
+  geant4web:
+    container_name: lamoda_test
+    image: lamoda_test
+    depends_on:
+    - db
+    links:
+    - db
+    ports:
+    - "8000:8000"
+volumes:
+  db-data:
+    driver: local

@@ -10,7 +10,7 @@ import (
 
 // Warehouses type is struct to interact with warehouses, has environment with bd as a field
 type Warehouses struct {
-	db *database.PostgresDB
+	db database.DataBase
 }
 
 // Create gets list of Warehouses and ask database to create them
@@ -22,7 +22,7 @@ func (wH *Warehouses) Create(args []lamodatest.Warehouse, reply *Reply) error {
 
 		if err := wH.db.CreateWarehouse(warehouse); err != nil {
 			log.Print("Error occured while creating warehouse ", err)
-			return err
+			continue
 		}
 		created = append(created, warehouse)
 	}
@@ -34,17 +34,17 @@ func (wH *Warehouses) Create(args []lamodatest.Warehouse, reply *Reply) error {
 
 // GetAmount map with good_code and warehouse_id fields, puts in reply amount of available goods at the warehouse
 func (wH *Warehouses) GetAmount(args map[string]int, reply *Reply) error {
-	good_code, ok := args["good_code"]
+	goodCode, ok := args["goodCode"]
 	if !ok {
 		return fmt.Errorf("request is incorrect, good_code is not presented")
 	}
-	warehouse_id, ok := args["warehouse_id"]
+	warehouseID, ok := args["warehouseID"]
 	if !ok {
 		return fmt.Errorf("request is incorrect, warehouse_id is not presented")
 	}
 
-	log.Printf("Getting amount of %d in warehouse %d", good_code, warehouse_id)
-	amount, err := wH.db.GetAmount(good_code, warehouse_id)
+	log.Printf("Getting amount of %d in warehouse %d", goodCode, warehouseID)
+	amount, err := wH.db.GetAmount(goodCode, warehouseID)
 	if err == nil {
 		*reply = Reply{fmt.Sprint("amount: ", amount)}
 	}

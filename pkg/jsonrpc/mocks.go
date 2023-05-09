@@ -6,11 +6,23 @@ import (
 	lamodatest "github.com/NikiTesla/lamoda_test"
 )
 
+type WarehouseGood struct {
+	goodCode        int
+	warehouseID     int
+	availableAmount int
+	reservedAmount  int
+}
+
 type MockDB struct {
-	goods []lamodatest.Good
+	goods          []lamodatest.Good
+	warehouses     []lamodatest.Warehouse
+	waregouseGoods []WarehouseGood
 }
 
 func (m *MockDB) CreateGood(good lamodatest.Good) error {
+	if good.Name == "" || good.Code == 0 || good.Amount < 0 {
+		return fmt.Errorf("check constraint")
+	}
 	for _, v := range m.goods {
 		if good.Code == v.Code {
 			return fmt.Errorf("good alrady exists")
@@ -21,22 +33,72 @@ func (m *MockDB) CreateGood(good lamodatest.Good) error {
 	return nil
 }
 
-func (m *MockDB) AddGood(good_code, warehouse_id, amount int) error {
-	return nil
+func (m *MockDB) AddGood(goodCode, warehouseID, amount int) error {
+	var availableAmount int
+	for _, v := range m.goods {
+		if v.Code == goodCode {
+			availableAmount = v.Amount
+			if amount <= availableAmount {
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("there is not enough %d good in %d warehouse. Available only %d",
+		goodCode, warehouseID, availableAmount)
 }
 
-func (m *MockDB) ReserveGood(good_code, warehouse_id, amount int) error {
-	return nil
+func (m *MockDB) ReserveGood(goodCode, warehouseID, amount int) error {
+	var availableAmount int
+	for _, v := range m.waregouseGoods {
+		if v.goodCode == goodCode && v.warehouseID == warehouseID {
+			availableAmount = v.availableAmount
+			if amount <= availableAmount {
+				availableAmount -= amount
+				v.reservedAmount += amount
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("there is not enough %d good in %d warehouse. Available only %d",
+		goodCode, warehouseID, availableAmount)
 }
 
-func (m *MockDB) CancelGoodReservation(good_code, warehouse_id, amount int) error {
-	return nil
+func (m *MockDB) CancelGoodReservation(goodCode, warehouseID, amount int) error {
+	var reservedAmount int
+	for i, v := range m.waregouseGoods {
+		if v.goodCode == goodCode && v.warehouseID == warehouseID {
+			reservedAmount = v.reservedAmount
+			if amount <= reservedAmount {
+				m.waregouseGoods[i].reservedAmount -= amount
+				m.waregouseGoods[i].availableAmount += amount
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("there is not enough reserved %d goods at the %d warehouse. Reserved only %d",
+		goodCode, warehouseID, reservedAmount)
 }
 
 func (m *MockDB) CreateWarehouse(warehouse lamodatest.Warehouse) error {
+	if warehouse.Name == "" {
+		return fmt.Errorf("check constraint")
+	}
+
+	for _, v := range m.warehouses {
+		if warehouse.Name == v.Name {
+			return fmt.Errorf("warehouse already exists")
+		}
+	}
+	m.warehouses = append(m.warehouses, warehouse)
+
 	return nil
 }
 
-func (m *MockDB) GetAmount(good_code, warehouse_id int) (int, error) {
-	return 0, nil
+func (m *MockDB) GetAmount(goodCode, warehouseID int) (int, error) {
+	for _, v := range m.waregouseGoods {
+		if goodCode == v.goodCode && warehouseID == v.warehouseID {
+			return v.availableAmount, nil
+		}
+	}
+	return 0, fmt.Errorf("there is no %d goods at the %d warehouse", goodCode, warehouseID)
 }

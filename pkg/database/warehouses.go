@@ -6,6 +6,8 @@ import (
 	lamodatest "github.com/NikiTesla/lamoda_test"
 )
 
+// CreateWarehouse check if warehouse exist
+// If not - inserts into warehouses table Warehouse.Name and Warehouse.Availability
 func (db *PostgresDB) CreateWarehouse(warehouse lamodatest.Warehouse) error {
 	fmt.Printf("Creating warehouse %v", warehouse)
 
@@ -24,14 +26,15 @@ func (db *PostgresDB) CreateWarehouse(warehouse lamodatest.Warehouse) error {
 	return err
 }
 
-func (db *PostgresDB) GetAmount(good_code, warehouse_id int) (int, error) {
-	fmt.Printf("Getting amount of %d", good_code)
+// GetAmount gets goodCode and warehouseID, returns available amount of goods at the warehouse
+func (db *PostgresDB) GetAmount(goodCode, warehouseID int) (int, error) {
+	fmt.Printf("Getting amount of %d", goodCode)
 
 	var amount int
 	row := db.DB.QueryRow("SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
-		good_code, warehouse_id)
+		goodCode, warehouseID)
 	if err := row.Scan(&amount); err != nil {
-		return 0, fmt.Errorf("there is no %d good in %d warehouse", good_code, warehouse_id)
+		return 0, fmt.Errorf("there is no %d goods at the %d warehouse", goodCode, warehouseID)
 	}
 
 	return amount, nil

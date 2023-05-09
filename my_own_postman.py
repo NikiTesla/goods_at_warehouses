@@ -51,14 +51,14 @@ def CreateGood():
     }])
 
 def AddGood():
-    """AddGood reads good_code, warehouse_id and amount of goods to add. Adding this into warehosue_goods"""
+    """AddGood reads goodCode, warehouseID and amount of goods to add. Adding this into warehosue_goods"""
     code = int(input("Enter good uniqe code: "))
-    warehouse_id = int(input("Enter warehouse id: "))
+    warehouseID = int(input("Enter warehouse id: "))
     amount = int(input("Enter amount of goods: "))
 
     jsonrpc_call("Goods.Add", [{
-        "good_code": code,
-        "warehouse_id": warehouse_id,
+        "goodCode": code,
+        "warehouseID": warehouseID,
         "amount": amount
     }])
 
@@ -76,31 +76,31 @@ def CreateWarehouse():
 def ReserveGood():
     """ReserveGood reads input numbers, split it by spaces and call Goods.Reserve with this list"""
     goods = []
-    good = input("Enter good for reservation (good_code warehouse_id amount): ").split()
+    good = input("Enter good for reservation (goodCode warehouseID amount): ").split()
     while good:
-        goods.append({"good_code": int(good[0]), "warehouse_id": int(good[1]), "amount": int(good[2])})
-        good = input("Enter good for reservation (good_code warehouse_id amount): ").split()
+        goods.append({"goodCode": int(good[0]), "warehouseID": int(good[1]), "amount": int(good[2])})
+        good = input("Enter good for reservation (goodCode warehouseID amount): ").split()
 
     jsonrpc_call("Goods.Reserve", goods)
 
 def CancelGoodReservation():
     """CancelGoodReservation reads input numbers, split it by spaces and call Goods. CancelReseration with this list"""
     goods = []
-    good = input("Enter good to cancel reservation (good_code warehouse_id amount): ").split()
+    good = input("Enter good to cancel reservation (goodCode warehouseID amount): ").split()
     while good:
-        goods.append({"good_code": int(good[0]), "warehouse_id": int(good[1]), "amount": int(good[2])})
-        good = input("Enter good for cancel reservation (good_code warehouse_id amount): ")
+        goods.append({"goodCode": int(good[0]), "warehouseID": int(good[1]), "amount": int(good[2])})
+        good = input("Enter good for cancel reservation (goodCode warehouseID amount): ")
 
     jsonrpc_call("Goods.CancelReservation", goods)
 
 def GetAmount():
     """Get amount reads good code and warehouse id. Call procedure Warehouses.GetAmount to get amount of good on warehouse"""
-    good_code = int(input("Enter good code: "))
-    warehouse_id = int(input("Enter warehouse id: "))
+    goodCode = int(input("Enter good code: "))
+    warehouseID = int(input("Enter warehouse id: "))
 
     jsonrpc_call("Warehouses.GetAmount", {
-        "good_code": good_code,
-        "warehouse_id": warehouse_id
+        "goodCode": goodCode,
+        "warehouseID": warehouseID
     })
 
 def match_choice():

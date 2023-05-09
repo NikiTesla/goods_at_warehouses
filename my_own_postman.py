@@ -9,6 +9,7 @@ Methods:
 4. Goods.Reserve
 5. Goods.CancelReservation
 6. Warehouses.GetAmount
+7. repeat __doc__
 """
 
 import socket
@@ -102,16 +103,7 @@ def GetAmount():
         "warehouse_id": warehouse_id
     })
 
-if __name__ == "__main__":
-    print(__doc__)
-    while True:
-        try:
-            choice = int(input())
-        except Exception:
-            print("Should be integer")
-        else:
-            break
-    
+def match_choice():
     match choice:
         case 1:
             AddGood()
@@ -125,3 +117,19 @@ if __name__ == "__main__":
             CancelGoodReservation()
         case 6:
             GetAmount()
+        case 7:
+            print(__doc__)
+
+if __name__ == "__main__":
+    print(__doc__)
+    while True:
+        try:
+            choice = int(input("Enter choice: "))
+        except Exception:
+            print("Should be integer")
+        else:
+            match_choice()
+            print()
+        
+
+

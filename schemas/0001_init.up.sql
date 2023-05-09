@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS goods(
 CREATE TABLE IF NOT EXISTS warehouse_goods(
     id serial PRIMARY KEY,
     warehouse_id INTEGER REFERENCES warehouses(id),
-    goods_id INTEGER REFERENCES goods(code),
+    good_code INTEGER REFERENCES goods(code),
     available_amount INTEGER NOT NULL CHECK(available_amount >= 0),
     reserved_amount INTEGER NOT NULL DEFAULT 0
-        CHECK(reserved_amount < available_amount AND reserved_amount >= 0)
+        CHECK(reserved_amount >= 0)
 );

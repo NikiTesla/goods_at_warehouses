@@ -58,7 +58,7 @@ func ReserveGood(good_code, warehouse_id, amount int, env *environment.Environme
 	return doIfAvailable(warehouse_id, env, func() error {
 		log.Printf("Reserving %d on warehouse %d in amount of %d", good_code, warehouse_id, amount)
 		var available_amount int
-		row := env.DB.QueryRow("SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2)",
+		row := env.DB.QueryRow("SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
 			good_code, warehouse_id)
 		row.Scan(&available_amount)
 
@@ -80,13 +80,13 @@ func ReserveGood(good_code, warehouse_id, amount int, env *environment.Environme
 func CancelGoodReservation(good_code, warehouse_id, amount int, env *environment.Environment) error {
 	return doIfAvailable(warehouse_id, env, func() error {
 		log.Printf("Canceling reservation %d on warehouse %d in amount of %d", good_code, warehouse_id, amount)
-		var available_amount int
-		row := env.DB.QueryRow("SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2)",
+		var reserved_amount int
+		row := env.DB.QueryRow("SELECT reserved_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
 			good_code, warehouse_id)
-		row.Scan(&available_amount)
+		row.Scan(&reserved_amount)
 
-		if available_amount < amount {
-			return fmt.Errorf("there is not enough %d good in warehouse %d", good_code, warehouse_id)
+		if reserved_amount < amount {
+			return fmt.Errorf("there is not enough reserved goods %d in warehouse %d", good_code, warehouse_id)
 		}
 
 		query := "UPDATE warehouse_goods SET " +
@@ -104,7 +104,7 @@ func CancelGoodReservation(good_code, warehouse_id, amount int, env *environment
 
 func doIfAvailable(warehouse_id int, env *environment.Environment, f func() error) error {
 	var err error
-	if _, err = env.DB.Exec("START TRANSACTION"); err != nil {
+	if _, err = env.DB.Exec("BEGIN;"); err != nil {
 		return err
 	}
 
@@ -122,11 +122,11 @@ func doIfAvailable(warehouse_id int, env *environment.Environment, f func() erro
 	row = env.DB.QueryRow("SELECT availability FROM warehouses WHERE id = $1", warehouse_id)
 	row.Scan(&availability)
 	if !availability {
-		env.DB.Exec("ROLLBACK")
+		env.DB.Exec("ROLLBACK;")
 		return fmt.Errorf("warehouse became unavailable while adding goods")
 	}
 
-	if _, err := env.DB.Exec("COMMIT"); err != nil {
+	if _, err := env.DB.Exec("COMMIT;"); err != nil {
 		return err
 	}
 

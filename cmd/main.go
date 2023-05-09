@@ -20,7 +20,7 @@ func main() {
 		log.Fatal("can't load environment, err:", err.Error())
 	}
 
-	server := jsonrpc.NewServer()
+	server := jsonrpc.NewServer(env)
 
 	if err = server.Run(env.Config.Port); err != nil {
 		log.Fatal("error occured while running server, error:", err.Error())

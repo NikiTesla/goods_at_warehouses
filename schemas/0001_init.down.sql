@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS warehouse_goods;
+
+DROP TABLE IF EXISTS warehouses;
+
+DROP TABLE IF EXISTS goods;

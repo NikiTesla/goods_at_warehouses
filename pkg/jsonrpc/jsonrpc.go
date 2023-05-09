@@ -7,6 +7,7 @@ import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
 
+	"github.com/NikiTesla/lamoda_test/pkg/database"
 	"github.com/NikiTesla/lamoda_test/pkg/environment"
 )
 
@@ -19,13 +20,15 @@ type Reply struct {
 	Data string
 }
 
+// NewServer creates Server with rpc Server and environment as fields
+// also registrates named methods
 func NewServer(env *environment.Environment) *Server {
 	rpcServer := rpc.NewServer()
 
-	if err := rpc.RegisterName("Goods", &Goods{env}); err != nil {
+	if err := rpc.RegisterName("Goods", &Goods{db: &database.PostgresDB{DB: env.DB}}); err != nil {
 		log.Println("cannot register goods: error", err.Error())
 	}
-	if err := rpc.RegisterName("Warehouses", &Warehouses{env}); err != nil {
+	if err := rpc.RegisterName("Warehouses", &Warehouses{db: &database.PostgresDB{DB: env.DB}}); err != nil {
 		log.Println("cannot register goods: error", err.Error())
 	}
 
@@ -35,6 +38,8 @@ func NewServer(env *environment.Environment) *Server {
 	}
 }
 
+// Run runs server on port that is waiting for connections
+// and run them in differnet goroutines
 func (s *Server) Run(port int) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
@@ -47,6 +52,6 @@ func (s *Server) Run(port int) error {
 			continue
 		}
 
-		jsonrpc.ServeConn(conn)
+		go jsonrpc.ServeConn(conn)
 	}
 }

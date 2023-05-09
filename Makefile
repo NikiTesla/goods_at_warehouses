@@ -15,7 +15,7 @@ run:
 	@ go run cmd/main.go
 
 docker:
-	@ sudo docker rmi -f geant4web
+	@ sudo docker rmi -f $(PROJECTNAME)
 	@ echo "  >  making docker container $(PROJECTNAME)..."
 	@ sudo docker build -t $(PROJECTNAME) .
 	@ sudo docker compose up

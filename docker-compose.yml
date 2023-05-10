@@ -13,7 +13,7 @@ services:
       volumes:
       - db-data:/var/lib/postgresql/data
 
-  geant4web:
+  lamoda_rpc:
     container_name: lamoda_test
     image: lamoda_test
     depends_on:

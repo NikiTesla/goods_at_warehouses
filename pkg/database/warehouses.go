@@ -9,8 +9,6 @@ import (
 // CreateWarehouse check if warehouse exist
 // If not - inserts into warehouses table Warehouse.Name and Warehouse.Availability
 func (db *PostgresDB) CreateWarehouse(warehouse lamodatest.Warehouse) error {
-	fmt.Printf("Creating warehouse %v", warehouse)
-
 	var exists bool
 	row := db.DB.QueryRow("SELECT EXISTS(SELECT id FROM warehouses WHERE name = $1)",
 		warehouse.Name)
@@ -28,8 +26,6 @@ func (db *PostgresDB) CreateWarehouse(warehouse lamodatest.Warehouse) error {
 
 // GetAmount gets goodCode and warehouseID, returns available amount of goods at the warehouse
 func (db *PostgresDB) GetAmount(goodCode, warehouseID int) (int, error) {
-	fmt.Printf("Getting amount of %d", goodCode)
-
 	var amount int
 	row := db.DB.QueryRow("SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
 		goodCode, warehouseID)

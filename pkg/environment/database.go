@@ -15,9 +15,11 @@ func NewDataBase(cfg DBConfig) (*sql.DB, error) {
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
-		return nil, fmt.Errorf("can't connect database, err: %s", err.Error())
+		return nil, fmt.Errorf("can't connect database, err: %s", err)
 	}
-	log.Printf("connected database, ping: error is %v", db.Ping())
+	if err := db.Ping(); err != nil {
+		log.Fatalf("Cannot connect to database, error: %s\n", err)
+	}
 
 	return db, nil
 }

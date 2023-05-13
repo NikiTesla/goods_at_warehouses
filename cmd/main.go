@@ -11,18 +11,18 @@ import (
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("can't load env variables, err:", err.Error())
+		log.Fatal("can't load env variables, err:", err)
 	}
 
 	configFile := os.Getenv("CONFIGFILE")
 	env, err := environment.NewEnvironment(configFile)
 	if err != nil {
-		log.Fatal("can't load environment, err:", err.Error())
+		log.Fatal("can't load environment, err:", err)
 	}
 
 	server := jsonrpc.NewServer(env)
 
 	if err = server.Run(env.Config.Port); err != nil {
-		log.Fatal("error occured while running server, error:", err.Error())
+		log.Fatal("error occured while running server, error:", err)
 	}
 }

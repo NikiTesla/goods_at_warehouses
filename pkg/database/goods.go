@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 
 	lamodatest "github.com/NikiTesla/lamoda_test"
 )
@@ -10,7 +9,6 @@ import (
 // CreateGood gets Good, check if it exists.
 // If does not exist - insert it into goods
 func (db *PostgresDB) CreateGood(good lamodatest.Good) error {
-	fmt.Printf("Creating good %v", good)
 	query := "INSERT INTO goods(name, code, size, amount) VALUES ($1, $2, $3, $4)"
 
 	var exists bool
@@ -36,7 +34,10 @@ func (db *PostgresDB) AddGood(goodCode, warehouseID, amount int) error {
 	return db.doIfAvailable(warehouseID, func() error {
 		var availableAmount int
 		row := db.DB.QueryRow("SELECT amount FROM goods WHERE code = $1", goodCode)
-		row.Scan(&availableAmount)
+		if err := row.Scan(&availableAmount); err != nil {
+			return fmt.Errorf("error occured while scanning row, error: %s", err)
+		}
+
 		if availableAmount < amount {
 			return fmt.Errorf("there is not enough %d good in %d warehouse. Available only %d",
 				goodCode, warehouseID, availableAmount)
@@ -71,7 +72,6 @@ func (db *PostgresDB) AddGood(goodCode, warehouseID, amount int) error {
 // Gets good code and warehouse id, check if there are enough available goods at the warehouse
 func (db *PostgresDB) ReserveGood(goodCode, warehouseID, amount int) error {
 	return db.doIfAvailable(warehouseID, func() error {
-		log.Printf("Reserving %d at the warehouse %d in amount of %d", goodCode, warehouseID, amount)
 		var availableAmount int
 		row := db.DB.QueryRow("SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
 			goodCode, warehouseID)
@@ -97,11 +97,12 @@ func (db *PostgresDB) ReserveGood(goodCode, warehouseID, amount int) error {
 // Gets good code and warehouse id, check if there are enough reserved goods at the warehouse
 func (db *PostgresDB) CancelGoodReservation(goodCode, warehouseID, amount int) error {
 	return db.doIfAvailable(warehouseID, func() error {
-		log.Printf("Canceling reservation %d at the warehouse %d in amount of %d", goodCode, warehouseID, amount)
 		var reservedAmount int
 		row := db.DB.QueryRow("SELECT reserved_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
 			goodCode, warehouseID)
-		row.Scan(&reservedAmount)
+		if err := row.Scan(&reservedAmount); err != nil {
+			return fmt.Errorf("error occured while scanning row, error: %s", err)
+		}
 
 		if reservedAmount < amount {
 			return fmt.Errorf("there is not enough reserved goods %d at the warehouse %d. Reserved only %d",
@@ -130,7 +131,10 @@ func (db *PostgresDB) doIfAvailable(warehouseID int, f func() error) error {
 
 	var availability bool
 	row := db.DB.QueryRow("SELECT availability FROM warehouses WHERE id = $1", warehouseID)
-	row.Scan(&availability)
+	if err := row.Scan(&availability); err != nil {
+		return fmt.Errorf("error occured while scanning row, error: %s", err)
+	}
+
 	if !availability {
 		return fmt.Errorf("warehouse not available at the moment")
 	}
@@ -140,7 +144,10 @@ func (db *PostgresDB) doIfAvailable(warehouseID int, f func() error) error {
 	}
 
 	row = db.DB.QueryRow("SELECT availability FROM warehouses WHERE id = $1", warehouseID)
-	row.Scan(&availability)
+	if err := row.Scan(&availability); err != nil {
+		return fmt.Errorf("error occured while scanning row, error: %s", err)
+	}
+
 	if !availability {
 		db.DB.Exec("ROLLBACK;")
 		return fmt.Errorf("warehouse became unavailable while adding goods")

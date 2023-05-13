@@ -26,7 +26,7 @@ func NewEnvironment(configFile string) (*Environment, error) {
 
 	log.Printf("Host is %s\n", cfg.Host)
 	log.Printf("Port is %d\n", cfg.Port)
-	log.Printf("Database config is %+v", cfg.DBConfig)
+	log.Printf("Database config is %+v\n", cfg.DBConfig)
 
 	return &Environment{
 		Config: cfg,

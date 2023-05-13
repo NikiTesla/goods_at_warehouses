@@ -1,7 +1,6 @@
 package jsonrpc
 
 import (
-	"fmt"
 	"log"
 
 	lamodatest "github.com/NikiTesla/lamoda_test"
@@ -13,113 +12,79 @@ type Goods struct {
 	db database.DataBase
 }
 
+// WarehouseGoods is a structure to store information about the actions with goods at warehouse
+type WarehouseGoodAction struct {
+	GoodCode    int    `json:"goodCode"`
+	WarehouseID int    `json:"warehouseID"`
+	Amount      int    `json:"amount"`
+	Status      string `json:"status"` // added, reserved or reservation cancelled
+}
+
 // Create gets list of goods as []Good, ask database to create them
 // put in reply successfully created goods
-func (g *Goods) Create(args []lamodatest.Good, reply *Reply) error {
+func (g *Goods) Create(args []lamodatest.Good, reply *[]lamodatest.Good) error {
 	created := make([]lamodatest.Good, 0, len(args))
 	for _, good := range args {
-		log.Printf("Creating good: %v", good)
-
 		if err := g.db.CreateGood(good); err != nil {
-			log.Printf("Error while creating good %v, error: %s", good, err.Error())
+			log.Printf("Error while creating good %v, error: %s\n", good, err.Error())
 			continue
 		}
 		created = append(created, good)
 	}
-	*reply = Reply{fmt.Sprintf("Created goods: %v", created)}
+	*reply = created
 
 	return nil
 }
 
 // Add gets list of maps with goodCode, warehouseID and amount of goods to be added
 // put in reply successfully added goods
-func (g *Goods) Add(args []map[string]int, reply *Reply) error {
-	log.Printf("Adding goods: %v", args)
-
-	added := make([]map[string]int, 0, len(args))
+func (g *Goods) Add(args []WarehouseGoodAction, reply *[]WarehouseGoodAction) error {
+	added := make([]WarehouseGoodAction, 0, len(args))
 	for _, arg := range args {
-		goodCode, warehouseID, amount, err := parseGoods(arg)
-		if err != nil {
-			log.Print("Error occured while parsing args, error: ", err.Error())
-			return err
-		}
-
-		if err := g.db.AddGood(goodCode, warehouseID, amount); err != nil {
-			log.Printf("Cannot add good with code %d, error: %s", goodCode, err.Error())
+		if err := g.db.AddGood(arg.GoodCode, arg.WarehouseID, arg.Amount); err != nil {
+			log.Printf("Cannot add good with code %d, error: %s\n", arg.GoodCode, err.Error())
 			continue
 		}
+		arg.Status = "added"
 		added = append(added, arg)
 	}
-	*reply = Reply{fmt.Sprintf("Added goods %v", added)}
+	*reply = added
 
 	return nil
 }
 
 // Reserve gets list of maps with goodCode, warehouseID and amount of goods to be reserved
 // put in reply successfully reserved goods
-func (g *Goods) Reserve(args []map[string]int, reply *Reply) error {
-	log.Print("Reserving: ", args)
-	reserved := make([]map[string]int, 0, len(args))
+func (g *Goods) Reserve(args []WarehouseGoodAction, reply *[]WarehouseGoodAction) error {
+	reserved := make([]WarehouseGoodAction, 0, len(args))
 	for _, arg := range args {
-		goodCode, warehouseID, amount, err := parseGoods(arg)
-		if err != nil {
-			log.Print("Error while parsing args ", err.Error())
-			return err
-		}
-
-		if err = g.db.ReserveGood(goodCode, warehouseID, amount); err != nil {
-			log.Printf("error occured while reserving good with code %d, error: %s", goodCode, err.Error())
+		if err := g.db.ReserveGood(arg.GoodCode, arg.WarehouseID, arg.Amount); err != nil {
+			log.Printf("error occured while reserving good with code %d, error: %s\n", arg.GoodCode, err.Error())
 			continue
 		}
+		arg.Status = "reserved"
 		reserved = append(reserved, arg)
 	}
-	*reply = Reply{fmt.Sprintf("Reserved goods: %v", reserved)}
 
-	log.Print("reserved")
+	*reply = reserved
 
 	return nil
 }
 
 // CancelReservation gets lsit of maps with goodCode, warehouseID and amount of goods to cancel reservation
 // put in reply successfully cancelled reservations of goods
-func (g *Goods) CancelReservation(args []map[string]int, reply *Reply) error {
-	log.Print("Canceling reservations: ", args)
-	cancelled := make([]map[string]int, 0, len(args))
+func (g *Goods) CancelReservation(args []WarehouseGoodAction, reply *[]WarehouseGoodAction) error {
+	cancelled := make([]WarehouseGoodAction, 0, len(args))
 	for _, arg := range args {
-		goodCode, warehouseID, amount, err := parseGoods(arg)
-		if err != nil {
-			log.Print("Error while parsing args ", err.Error())
-			return err
-		}
-
-		if err := g.db.CancelGoodReservation(goodCode, warehouseID, amount); err != nil {
-			log.Printf("error occured while cancelling reservation of good with code %d, error: %s", goodCode, err.Error())
+		if err := g.db.CancelGoodReservation(arg.GoodCode, arg.WarehouseID, arg.Amount); err != nil {
+			log.Printf("error occured while cancelling reservation of good with code %d, error: %s\n", arg.GoodCode, err.Error())
 			continue
 		}
+		arg.Status = "reservation cancelled"
 		cancelled = append(cancelled, arg)
 	}
 
-	*reply = Reply{fmt.Sprintf("Cancel reservations of goods: %v", cancelled)}
-
-	log.Print("cancelled")
+	*reply = cancelled
 
 	return nil
-}
-
-// parseGoods is internal function to parse args where goodCode, warehouseID and amount all required
-// gets map with these fields, returns them in presented above order and error
-func parseGoods(arg map[string]int) (int, int, int, error) {
-	goodCode, ok := arg["goodCode"]
-	if !ok {
-		return 0, 0, 0, fmt.Errorf("incorrect request, goodCode not presented")
-	}
-	warehouseID, ok := arg["warehouseID"]
-	if !ok {
-		return 0, 0, 0, fmt.Errorf("incorrect request, warehouseID not presented")
-	}
-	amount, ok := arg["amount"]
-	if !ok {
-		return 0, 0, 0, fmt.Errorf("incorrect request, amount not presented")
-	}
-	return goodCode, warehouseID, amount, nil
 }

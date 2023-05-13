@@ -26,10 +26,10 @@ func NewServer(env *environment.Environment) *Server {
 	rpcServer := rpc.NewServer()
 
 	if err := rpc.RegisterName("Goods", &Goods{db: &database.PostgresDB{DB: env.DB}}); err != nil {
-		log.Println("cannot register goods: error", err.Error())
+		log.Printf("cannot register goods, error: %s\n", err.Error())
 	}
 	if err := rpc.RegisterName("Warehouses", &Warehouses{db: &database.PostgresDB{DB: env.DB}}); err != nil {
-		log.Println("cannot register goods: error", err.Error())
+		log.Printf("cannot register goods, error: %s\n", err.Error())
 	}
 
 	return &Server{

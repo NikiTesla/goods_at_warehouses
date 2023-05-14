@@ -1,14 +1,15 @@
 package environment
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
+
+	"github.com/jackc/pgx"
 )
 
 type Environment struct {
 	Config *Config
-	DB     *sql.DB
+	DB     *pgx.Conn
 }
 
 func NewEnvironment(configFile string) (*Environment, error) {

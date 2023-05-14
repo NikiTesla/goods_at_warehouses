@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	lamodatest "github.com/NikiTesla/lamoda_test"
+	"github.com/jackc/pgx"
 )
 
 // CreateGood gets Good, check if it exists.
@@ -12,15 +13,17 @@ func (db *PostgresDB) CreateGood(good lamodatest.Good) error {
 	query := "INSERT INTO goods(name, code, size, amount) VALUES ($1, $2, $3, $4)"
 
 	var exists bool
-	row := db.DB.QueryRow("SELECT EXISTS(SELECT id FROM goods WHERE code = $1)",
-		good.Code)
-	row.Scan(&exists)
+	err := db.DB.QueryRow("SELECT EXISTS(SELECT id FROM goods WHERE code = $1)",
+		good.Code).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("error occured while creating good, error: %s", err)
+	}
 
 	if exists {
 		return fmt.Errorf("good already exists")
 	}
 
-	_, err := db.DB.Exec(query, good.Name, good.Code, good.Size, good.Amount)
+	_, err = db.DB.Exec(query, good.Name, good.Code, good.Size, good.Amount)
 	if err != nil {
 		return err
 	}
@@ -31,11 +34,11 @@ func (db *PostgresDB) CreateGood(good lamodatest.Good) error {
 // Checks if there are enough goods at the sort center (joint storage)
 // If there are such goods at the warehouse, sum their amounts. If not - inserts new row in the table
 func (db *PostgresDB) AddGood(goodCode, warehouseID, amount int) error {
-	return db.doIfAvailable(warehouseID, func() error {
+	return db.doIfAvailable(warehouseID, func(Tx *pgx.Tx) error {
 		var availableAmount int
-		row := db.DB.QueryRow("SELECT amount FROM goods WHERE code = $1", goodCode)
-		if err := row.Scan(&availableAmount); err != nil {
-			return fmt.Errorf("error occured while scanning row, error: %s", err)
+		err := Tx.QueryRow("SELECT amount FROM goods WHERE code = $1", goodCode).Scan(&availableAmount)
+		if err != nil {
+			return fmt.Errorf("error occured while adding goods in database, error: %s", err)
 		}
 
 		if availableAmount < amount {
@@ -43,24 +46,25 @@ func (db *PostgresDB) AddGood(goodCode, warehouseID, amount int) error {
 				goodCode, warehouseID, availableAmount)
 		}
 
-		_, err := db.DB.Exec("UPDATE goods SET amount = amount - $1 WHERE code = $2", amount, goodCode)
+		_, err = Tx.Exec("UPDATE goods SET amount = amount - $1 WHERE code = $2", amount, goodCode)
 		if err != nil {
 			return err
 		}
 
 		var exists bool
-		row = db.DB.QueryRow("SELECT EXISTS(SELECT id FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2)",
-			goodCode, warehouseID)
-		row.Scan(&exists)
+		query := "SELECT EXISTS(SELECT id FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2)"
+		err = Tx.QueryRow(query, goodCode, warehouseID).Scan(&exists)
+		if err != nil {
+			return err
+		}
 
-		var query string
 		if !exists {
 			query = "INSERT INTO warehouse_goods(good_code, warehouse_id, available_amount) VALUES ($1, $2, $3)"
 		} else {
 			query = "UPDATE warehouse_goods SET available_amount = available_amount + $3 WHERE good_code = $1 AND warehouse_id = $2"
 		}
 
-		if _, err := db.DB.Exec(query, goodCode, warehouseID, amount); err != nil {
+		if _, err = Tx.Exec(query, goodCode, warehouseID, amount); err != nil {
 			return err
 		}
 
@@ -71,22 +75,24 @@ func (db *PostgresDB) AddGood(goodCode, warehouseID, amount int) error {
 // ReserveGood uses doIfAvailable to reserve goods safely
 // Gets good code and warehouse id, check if there are enough available goods at the warehouse
 func (db *PostgresDB) ReserveGood(goodCode, warehouseID, amount int) error {
-	return db.doIfAvailable(warehouseID, func() error {
+	return db.doIfAvailable(warehouseID, func(Tx *pgx.Tx) error {
 		var availableAmount int
-		row := db.DB.QueryRow("SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
-			goodCode, warehouseID)
-		row.Scan(&availableAmount)
+		query := "SELECT available_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2"
+		err := Tx.QueryRow(query, goodCode, warehouseID).Scan(&availableAmount)
+		if err != nil {
+			return fmt.Errorf("error occured while reserving goods in database, error: %s", err)
+		}
 
 		if availableAmount < amount {
 			return fmt.Errorf("there is not enough %d good in warehouse %d. Available only %d",
 				goodCode, warehouseID, availableAmount)
 		}
 
-		query := "UPDATE warehouse_goods SET " +
+		query = "UPDATE warehouse_goods SET " +
 			"available_amount = available_amount - $2, reserved_amount = reserved_amount + $2 " +
 			"WHERE good_code = $1 AND warehouse_id = $3"
 
-		if _, err := db.DB.Exec(query, goodCode, amount, warehouseID); err != nil {
+		if _, err = db.DB.Exec(query, goodCode, amount, warehouseID); err != nil {
 			return err
 		}
 		return nil
@@ -96,12 +102,12 @@ func (db *PostgresDB) ReserveGood(goodCode, warehouseID, amount int) error {
 // CancelGoodReservation uses doIfAvailable to cancel reservation of good safely
 // Gets good code and warehouse id, check if there are enough reserved goods at the warehouse
 func (db *PostgresDB) CancelGoodReservation(goodCode, warehouseID, amount int) error {
-	return db.doIfAvailable(warehouseID, func() error {
+	return db.doIfAvailable(warehouseID, func(Tx *pgx.Tx) error {
 		var reservedAmount int
-		row := db.DB.QueryRow("SELECT reserved_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2",
-			goodCode, warehouseID)
-		if err := row.Scan(&reservedAmount); err != nil {
-			return fmt.Errorf("error occured while scanning row, error: %s", err)
+		query := "SELECT reserved_amount FROM warehouse_goods WHERE good_code = $1 AND warehouse_id = $2"
+		err := Tx.QueryRow(query, goodCode, warehouseID).Scan(&reservedAmount)
+		if err != nil {
+			return fmt.Errorf("error occured while canceling good reservation in database, error: %s", err)
 		}
 
 		if reservedAmount < amount {
@@ -109,11 +115,11 @@ func (db *PostgresDB) CancelGoodReservation(goodCode, warehouseID, amount int) e
 				goodCode, warehouseID, reservedAmount)
 		}
 
-		query := "UPDATE warehouse_goods SET " +
+		query = "UPDATE warehouse_goods SET " +
 			"available_amount = available_amount + $2, reserved_amount = reserved_amount - $2 " +
 			"WHERE good_code = $1 AND warehouse_id = $3"
 
-		_, err := db.DB.Exec(query, goodCode, amount, warehouseID)
+		_, err = Tx.Exec(query, goodCode, amount, warehouseID)
 		if err != nil {
 			return err
 		}
@@ -123,15 +129,15 @@ func (db *PostgresDB) CancelGoodReservation(goodCode, warehouseID, amount int) e
 }
 
 // doIfAvailable is method to wrap functional in transaction shell
-func (db *PostgresDB) doIfAvailable(warehouseID int, f func() error) error {
-	var err error
-	if _, err = db.DB.Exec("BEGIN;"); err != nil {
+func (db *PostgresDB) doIfAvailable(warehouseID int, f func(*pgx.Tx) error) error {
+	Tx, err := db.DB.Begin()
+	if err != nil {
 		return err
 	}
 
 	var availability bool
-	row := db.DB.QueryRow("SELECT availability FROM warehouses WHERE id = $1", warehouseID)
-	if err := row.Scan(&availability); err != nil {
+	err = Tx.QueryRow("SELECT availability FROM warehouses WHERE id = $1", warehouseID).Scan(&availability)
+	if err != nil {
 		return fmt.Errorf("error occured while scanning row, error: %s", err)
 	}
 
@@ -139,22 +145,24 @@ func (db *PostgresDB) doIfAvailable(warehouseID int, f func() error) error {
 		return fmt.Errorf("warehouse not available at the moment")
 	}
 
-	if err = f(); err != nil {
+	if err = f(Tx); err != nil {
 		return err
 	}
 
-	row = db.DB.QueryRow("SELECT availability FROM warehouses WHERE id = $1", warehouseID)
-	if err := row.Scan(&availability); err != nil {
+	err = Tx.QueryRow("SELECT availability FROM warehouses WHERE id = $1", warehouseID).Scan(&availability)
+	if err != nil {
 		return fmt.Errorf("error occured while scanning row, error: %s", err)
 	}
 
 	if !availability {
-		db.DB.Exec("ROLLBACK;")
+		if err = Tx.Rollback(); err != nil {
+			return fmt.Errorf("warehouse became unavailable while adding goods and rollback failed with error: %s", err)
+		}
 		return fmt.Errorf("warehouse became unavailable while adding goods")
 	}
 
-	if _, err := db.DB.Exec("COMMIT;"); err != nil {
-		return err
+	if err = Tx.Commit(); err != nil {
+		return fmt.Errorf("commiting of transaction failed with error: %s", err)
 	}
 
 	return nil

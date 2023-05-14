@@ -1,9 +1,8 @@
 package database
 
 import (
-	"database/sql"
-
 	lamodatest "github.com/NikiTesla/lamoda_test"
+	"github.com/jackc/pgx"
 )
 
 type DataBase interface {
@@ -16,5 +15,5 @@ type DataBase interface {
 }
 
 type PostgresDB struct {
-	DB *sql.DB
+	DB *pgx.Conn
 }

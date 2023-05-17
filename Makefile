@@ -14,7 +14,7 @@ run:
 	@ sleep 0.1
 	@ go run cmd/main.go
 
-docker:
+docker: migration-up
 	@ sudo docker rmi -f $(PROJECTNAME)
 	@ echo "  >  making docker container $(PROJECTNAME)..."
 	@ sudo docker build -t $(PROJECTNAME) .
@@ -25,11 +25,11 @@ migration-up:
 	@ echo "  >  making migrations"
 	@ sudo docker start goods_at_warehouses_pg
 	@ sleep 0.1
-	@ cat schemas/$(ARGS)_init.up.sql | sudo docker exec -i goods_at_warehouses_pg  psql -U postgres -d lamoda
+	@ cat schemas/0001_init.up.sql | sudo docker exec -i goods_at_warehouses_pg  psql -U postgres -d postgres
 
 # usage make migration-down ARGS="[version]" 
 migration-down:
 	@ echo "  >  making migrations"
 	@ sudo docker start goods_at_warehouses_pg
 	@ sleep 0.1
-	@ cat schemas/$(ARGS)_init.down.sql | sudo docker exec -i goods_at_warehouses_pg  psql -U postgres -d lamoda
+	@ cat schemas/0001_init.down.sql | sudo docker exec -i goods_at_warehouses_pg  psql -U postgres -d postgres

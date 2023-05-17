@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	lamodatest "github.com/NikiTesla/lamoda_test"
-	"github.com/NikiTesla/lamoda_test/pkg/database"
+	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/database"
 )
 
 // Warehouses type is struct to interact with warehouses, has environment with bd as a field
@@ -15,8 +15,8 @@ type Warehouses struct {
 
 // Create gets list of Warehouses and ask database to create them
 // puts in reply list of successfully created
-func (wH *Warehouses) Create(args []lamodatest.Warehouse, reply *[]lamodatest.Warehouse) error {
-	created := make([]lamodatest.Warehouse, 0, len(args))
+func (wH *Warehouses) Create(args []goods_at_warehouses.Warehouse, reply *[]goods_at_warehouses.Warehouse) error {
+	created := make([]goods_at_warehouses.Warehouse, 0, len(args))
 	for _, warehouse := range args {
 		if err := wH.db.CreateWarehouse(warehouse); err != nil {
 			log.Printf("Error occured while creating warehouse %s\n", err)

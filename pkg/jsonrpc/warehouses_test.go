@@ -4,13 +4,12 @@ package jsonrpc
 // 	"fmt"
 // 	"testing"
 
-// 	lamodatest "github.com/NikiTesla/lamoda_test"
 // )
 
 // func TestWarehouseCreate(t *testing.T) {
 // 	mock := &Warehouses{db: &MockDB{}}
 
-// 	args := [][]lamodatest.Warehouse{
+// 	args := [][]goods_at_warehouses.Warehouse{
 // 		{{Name: "Main", Availability: true}, {Name: "Old", Availability: false}},
 // 		{{}},
 // 	}

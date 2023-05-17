@@ -3,13 +3,13 @@ package database
 import (
 	"fmt"
 
-	lamodatest "github.com/NikiTesla/lamoda_test"
+	"github.com/NikiTesla/goods_at_warehouses"
 	"github.com/jackc/pgx"
 )
 
 // CreateGood gets Good, check if it exists.
 // If does not exist - insert it into goods
-func (db *PostgresDB) CreateGood(good lamodatest.Good) error {
+func (db *PostgresDB) CreateGood(good goods_at_warehouses.Good) error {
 	query := "INSERT INTO goods(name, code, size, amount) VALUES ($1, $2, $3, $4)"
 
 	var exists bool

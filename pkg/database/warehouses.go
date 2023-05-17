@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	lamodatest "github.com/NikiTesla/lamoda_test"
+	"github.com/NikiTesla/goods_at_warehouses"
 )
 
 // CreateWarehouse check if warehouse exist
 // If not - inserts into warehouses table Warehouse.Name and Warehouse.Availability
-func (db *PostgresDB) CreateWarehouse(warehouse lamodatest.Warehouse) error {
+func (db *PostgresDB) CreateWarehouse(warehouse goods_at_warehouses.Warehouse) error {
 	var exists bool
 	err := db.DB.QueryRow("SELECT EXISTS(SELECT id FROM warehouses WHERE name = $1)",
 		warehouse.Name).Scan(&exists)

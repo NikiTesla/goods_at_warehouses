@@ -7,8 +7,8 @@ import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
 
-	"github.com/NikiTesla/lamoda_test/pkg/database"
-	"github.com/NikiTesla/lamoda_test/pkg/environment"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/database"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/environment"
 )
 
 type Server struct {

@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/NikiTesla/lamoda_test/pkg/environment"
-	"github.com/NikiTesla/lamoda_test/pkg/jsonrpc"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/environment"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/jsonrpc"
 	"github.com/joho/godotenv"
 )
 

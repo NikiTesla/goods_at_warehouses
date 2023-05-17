@@ -1,21 +1,21 @@
 version: '3.8'
 services:
   db:
-      container_name: lamoda_pg
+      container_name: goods_at_warehouses_pg
       image: postgres:15
       restart: always
       environment:
         POSTGRES_USER: postgres
         POSTGRES_PASSWORD: pass
-        POSTGRES_DB: lamoda
+        POSTGRES_DB: postgres
       ports:
       - "5433:5432"
       volumes:
       - db-data:/var/lib/postgresql/data
 
   lamoda_rpc:
-    container_name: lamoda_test
-    image: lamoda_test
+    container_name: goods_at_warehouses
+    image: goods_at_warehouses
     depends_on:
     - db
     links:

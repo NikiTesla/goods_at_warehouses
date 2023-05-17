@@ -1,4 +1,4 @@
-package lamodatest
+package goods_at_warehouses
 
 type Good struct {
 	Name   string  `json:"name"`

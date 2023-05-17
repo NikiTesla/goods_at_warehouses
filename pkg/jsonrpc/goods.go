@@ -3,8 +3,8 @@ package jsonrpc
 import (
 	"log"
 
-	lamodatest "github.com/NikiTesla/lamoda_test"
-	"github.com/NikiTesla/lamoda_test/pkg/database"
+	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/database"
 )
 
 // Goods is struct to interact with goods at different warehouses, has environment with bd as a field
@@ -22,8 +22,8 @@ type WarehouseGoodAction struct {
 
 // Create gets list of goods as []Good, ask database to create them
 // put in reply successfully created goods
-func (g *Goods) Create(args []lamodatest.Good, reply *[]lamodatest.Good) error {
-	created := make([]lamodatest.Good, 0, len(args))
+func (g *Goods) Create(args []goods_at_warehouses.Good, reply *[]goods_at_warehouses.Good) error {
+	created := make([]goods_at_warehouses.Good, 0, len(args))
 	for _, good := range args {
 		if err := g.db.CreateGood(good); err != nil {
 			log.Printf("Error while creating good %v, error: %s\n", good, err.Error())

@@ -1,10 +1,17 @@
 package jsonrpc
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/NikiTesla/goods_at_warehouses"
 	"github.com/NikiTesla/goods_at_warehouses/pkg/database"
+)
+
+const (
+	statusCreated              = "created"
+	statusAdded                = "added"
+	statusReserved             = "reserved"
+	statusReservationCancelled = "reservation cancelled"
 )
 
 // Goods is struct to interact with goods at different warehouses, has environment with bd as a field
@@ -26,13 +33,12 @@ func (g *Goods) Create(args []goods_at_warehouses.Good, reply *[]goods_at_wareho
 	created := make([]goods_at_warehouses.Good, 0, len(args))
 	for _, good := range args {
 		if err := g.db.CreateGood(good); err != nil {
-			log.Printf("Error while creating good %v, error: %s\n", good, err.Error())
+			log.WithError(err).Errorf("cannot create good with code %d", good.Code)
 			continue
 		}
 		created = append(created, good)
 	}
 	*reply = created
-
 	return nil
 }
 
@@ -42,14 +48,13 @@ func (g *Goods) Add(args []WarehouseGoodAction, reply *[]WarehouseGoodAction) er
 	added := make([]WarehouseGoodAction, 0, len(args))
 	for _, arg := range args {
 		if err := g.db.AddGood(arg.GoodCode, arg.WarehouseID, arg.Amount); err != nil {
-			log.Printf("Cannot add good with code %d, error: %s\n", arg.GoodCode, err.Error())
+			log.WithError(err).Errorf("cannot add good with code %d", arg.GoodCode)
 			continue
 		}
-		arg.Status = "added"
+		arg.Status = statusAdded
 		added = append(added, arg)
 	}
 	*reply = added
-
 	return nil
 }
 
@@ -59,15 +64,13 @@ func (g *Goods) Reserve(args []WarehouseGoodAction, reply *[]WarehouseGoodAction
 	reserved := make([]WarehouseGoodAction, 0, len(args))
 	for _, arg := range args {
 		if err := g.db.ReserveGood(arg.GoodCode, arg.WarehouseID, arg.Amount); err != nil {
-			log.Printf("error occured while reserving good with code %d, error: %s\n", arg.GoodCode, err.Error())
+			log.WithError(err).Errorf("cannot reserve good with code %d", arg.GoodCode)
 			continue
 		}
-		arg.Status = "reserved"
+		arg.Status = statusReserved
 		reserved = append(reserved, arg)
 	}
-
 	*reply = reserved
-
 	return nil
 }
 
@@ -77,14 +80,12 @@ func (g *Goods) CancelReservation(args []WarehouseGoodAction, reply *[]Warehouse
 	cancelled := make([]WarehouseGoodAction, 0, len(args))
 	for _, arg := range args {
 		if err := g.db.CancelGoodReservation(arg.GoodCode, arg.WarehouseID, arg.Amount); err != nil {
-			log.Printf("error occured while cancelling reservation of good with code %d, error: %s\n", arg.GoodCode, err.Error())
+			log.WithError(err).Printf("error occured while cancelling reservation of good with code %d, error: %s\n", arg.GoodCode, err.Error())
 			continue
 		}
-		arg.Status = "reservation cancelled"
+		arg.Status = statusReservationCancelled
 		cancelled = append(cancelled, arg)
 	}
-
 	*reply = cancelled
-
 	return nil
 }

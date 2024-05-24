@@ -29,7 +29,6 @@ func (m *MockDB) CreateGood(good goods_at_warehouses.Good) error {
 		}
 	}
 	m.goods = append(m.goods, good)
-
 	return nil
 }
 

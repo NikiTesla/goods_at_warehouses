@@ -2,7 +2,8 @@ package jsonrpc
 
 import (
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/NikiTesla/goods_at_warehouses"
 	"github.com/NikiTesla/goods_at_warehouses/pkg/database"
@@ -19,14 +20,12 @@ func (wH *Warehouses) Create(args []goods_at_warehouses.Warehouse, reply *[]good
 	created := make([]goods_at_warehouses.Warehouse, 0, len(args))
 	for _, warehouse := range args {
 		if err := wH.db.CreateWarehouse(warehouse); err != nil {
-			log.Printf("Error occured while creating warehouse %s\n", err)
+			log.WithError(err).Error("cannot create warehouse")
 			continue
 		}
 		created = append(created, warehouse)
 	}
-
 	*reply = created
-
 	return nil
 }
 
@@ -40,11 +39,9 @@ func (wH *Warehouses) GetAmount(args map[string]int, reply *int) error {
 	if !ok {
 		return fmt.Errorf("request is incorrect, warehouse_id is not presented")
 	}
-
 	amount, err := wH.db.GetAmount(goodCode, warehouseID)
 	if err == nil {
 		*reply = amount
 	}
-
 	return err
 }

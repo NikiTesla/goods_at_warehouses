@@ -1,8 +1,9 @@
 package main
 
 import (
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/NikiTesla/goods_at_warehouses/pkg/environment"
 	"github.com/NikiTesla/goods_at_warehouses/pkg/jsonrpc"
@@ -11,18 +12,16 @@ import (
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("can't load env variables, err:", err)
+		log.WithError(err).Fatal("can't load env variables")
 	}
-
-	configFile := os.Getenv("CONFIGFILE")
+	configFile := os.Getenv("CONFIG_FILE")
 	env, err := environment.NewEnvironment(configFile)
 	if err != nil {
-		log.Fatal("can't load environment, err:", err)
+		log.WithError(err).Fatal("can't load environment")
 	}
 
 	server := jsonrpc.NewServer(env)
-
 	if err = server.Run(env.Config.Port); err != nil {
-		log.Fatal("error occured while running server, error:", err)
+		log.WithError(err).Fatal("error occured while running server")
 	}
 }

@@ -1,4 +1,4 @@
-package goods_at_warehouses
+package core
 
 type Warehouse struct {
 	Name         string `json:"name"`

@@ -3,7 +3,7 @@ package jsonrpc
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/core"
 	"github.com/NikiTesla/goods_at_warehouses/pkg/database"
 )
 
@@ -29,8 +29,8 @@ type WarehouseGoodAction struct {
 
 // Create gets list of goods as []Good, ask database to create them
 // put in reply successfully created goods
-func (g *Goods) Create(args []goods_at_warehouses.Good, reply *[]goods_at_warehouses.Good) error {
-	created := make([]goods_at_warehouses.Good, 0, len(args))
+func (g *Goods) Create(args []core.Good, reply *[]core.Good) error {
+	created := make([]core.Good, 0, len(args))
 	for _, good := range args {
 		if err := g.db.CreateGood(good); err != nil {
 			log.WithError(err).Errorf("cannot create good with code %d", good.Code)

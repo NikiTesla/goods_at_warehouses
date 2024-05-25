@@ -5,7 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/core"
 	"github.com/NikiTesla/goods_at_warehouses/pkg/database"
 )
 
@@ -16,8 +16,8 @@ type Warehouses struct {
 
 // Create gets list of Warehouses and ask database to create them
 // puts in reply list of successfully created
-func (wH *Warehouses) Create(args []goods_at_warehouses.Warehouse, reply *[]goods_at_warehouses.Warehouse) error {
-	created := make([]goods_at_warehouses.Warehouse, 0, len(args))
+func (wH *Warehouses) Create(args []core.Warehouse, reply *[]core.Warehouse) error {
+	created := make([]core.Warehouse, 0, len(args))
 	for _, warehouse := range args {
 		if err := wH.db.CreateWarehouse(warehouse); err != nil {
 			log.WithError(err).Error("cannot create warehouse")

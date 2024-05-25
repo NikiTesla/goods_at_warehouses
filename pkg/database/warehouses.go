@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/core"
 )
 
 // CreateWarehouse check if warehouse exist
 // If not - inserts into warehouses table Warehouse.Name and Warehouse.Availability
-func (db *PostgresDB) CreateWarehouse(warehouse goods_at_warehouses.Warehouse) error {
+func (db *PostgresDB) CreateWarehouse(warehouse core.Warehouse) error {
 	var exists bool
 	err := db.DB.QueryRow("SELECT EXISTS(SELECT id FROM warehouses WHERE name = $1)",
 		warehouse.Name).Scan(&exists)
@@ -37,6 +37,5 @@ func (db *PostgresDB) GetAmount(goodCode, warehouseID int) (int, error) {
 		log.Println(err)
 		return 0, fmt.Errorf("there is no %d goods at the %d warehouse", goodCode, warehouseID)
 	}
-
 	return amount, nil
 }

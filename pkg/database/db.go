@@ -1,16 +1,16 @@
 package database
 
 import (
-	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/core"
 	"github.com/jackc/pgx"
 )
 
 type DataBase interface {
-	CreateGood(good goods_at_warehouses.Good) error
+	CreateGood(good core.Good) error
 	AddGood(goodCode int, warehouseID int, amount int) error
 	ReserveGood(goodCode int, warehouseID int, amount int) error
 	CancelGoodReservation(goodCode int, warehouseID int, amount int) error
-	CreateWarehouse(warehouse goods_at_warehouses.Warehouse) error
+	CreateWarehouse(warehouse core.Warehouse) error
 	GetAmount(goodCode int, warehouseID int) (int, error)
 }
 

@@ -3,7 +3,7 @@ package jsonrpc
 import (
 	"fmt"
 
-	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/core"
 )
 
 type WarehouseGood struct {
@@ -14,12 +14,12 @@ type WarehouseGood struct {
 }
 
 type MockDB struct {
-	goods          []goods_at_warehouses.Good
-	warehouses     []goods_at_warehouses.Warehouse
+	goods          []core.Good
+	warehouses     []core.Warehouse
 	waregouseGoods []WarehouseGood
 }
 
-func (m *MockDB) CreateGood(good goods_at_warehouses.Good) error {
+func (m *MockDB) CreateGood(good core.Good) error {
 	if good.Name == "" || good.Code == 0 || good.Amount < 0 {
 		return fmt.Errorf("check constraint")
 	}
@@ -78,7 +78,7 @@ func (m *MockDB) CancelGoodReservation(goodCode, warehouseID, amount int) error 
 		goodCode, warehouseID, reservedAmount)
 }
 
-func (m *MockDB) CreateWarehouse(warehouse goods_at_warehouses.Warehouse) error {
+func (m *MockDB) CreateWarehouse(warehouse core.Warehouse) error {
 	if warehouse.Name == "" {
 		return fmt.Errorf("check constraint")
 	}

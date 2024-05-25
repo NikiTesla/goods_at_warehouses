@@ -34,6 +34,5 @@ func NewConfig(configFile string) (*Config, error) {
 		log.WithError(err).Error("cannot unmarshall config json")
 		return nil, err
 	}
-
 	return &config, nil
 }

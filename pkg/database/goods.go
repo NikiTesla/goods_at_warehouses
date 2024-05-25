@@ -3,13 +3,13 @@ package database
 import (
 	"fmt"
 
-	"github.com/NikiTesla/goods_at_warehouses"
+	"github.com/NikiTesla/goods_at_warehouses/pkg/core"
 	"github.com/jackc/pgx"
 )
 
 // CreateGood gets Good, check if it exists.
 // If does not exist - insert it into goods
-func (db *PostgresDB) CreateGood(good goods_at_warehouses.Good) error {
+func (db *PostgresDB) CreateGood(good core.Good) error {
 	query := "INSERT INTO goods(name, code, size, amount) VALUES ($1, $2, $3, $4)"
 
 	var exists bool
@@ -67,7 +67,6 @@ func (db *PostgresDB) AddGood(goodCode, warehouseID, amount int) error {
 		if _, err = Tx.Exec(query, goodCode, warehouseID, amount); err != nil {
 			return err
 		}
-
 		return nil
 	})
 }
@@ -123,7 +122,6 @@ func (db *PostgresDB) CancelGoodReservation(goodCode, warehouseID, amount int) e
 		if err != nil {
 			return err
 		}
-
 		return nil
 	})
 }
@@ -164,6 +162,5 @@ func (db *PostgresDB) doIfAvailable(warehouseID int, f func(*pgx.Tx) error) erro
 	if err = Tx.Commit(); err != nil {
 		return fmt.Errorf("commiting of transaction failed with error: %s", err)
 	}
-
 	return nil
 }
